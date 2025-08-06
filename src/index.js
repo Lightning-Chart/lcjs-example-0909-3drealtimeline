@@ -55,7 +55,7 @@ const seriesConf = [
 chart3D
     .getDefaultAxisX()
     .setDefaultInterval((state) => ({ end: state.dataMax, start: (state.dataMax ?? 0) - 1000, stopAxisAfter: false }))
-    .setScrollStrategy(AxisScrollStrategies.progressive)
+    .setScrollStrategy(AxisScrollStrategies.scrolling)
 
 // Set Z Axis interval immediately.
 chart3D.getDefaultAxisZ().setInterval({ start: -1, end: 1 + seriesConf.reduce((prev, cur, i) => Math.max(prev, i), 0) })
@@ -94,16 +94,6 @@ Promise.all(
             })
     }),
 ).then((seriesAndData) => {
-    // Add LegendBox to chart (after series were created).
-    const legend = chart3D
-        .addLegendBox()
-        // Dispose example UI elements automatically if they take too much space. This is to avoid bad UI on mobile / etc. devices.
-        .setAutoDispose({
-            type: 'max-width',
-            maxWidth: 0.2,
-        })
-        .add(chart3D)
-
     // Setup streaming to all series.
     let tStart = Date.now()
     let dataAmount = 0
