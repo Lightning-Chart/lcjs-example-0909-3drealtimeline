@@ -76,7 +76,7 @@ Promise.all(
         const seriesName = conf.name || ''
         const seriesZ = conf.z || iSeries
 
-        const series = chart3D.addLineSeries().setName(seriesName)
+        const series = chart3D.addLineSeries().setName(seriesName).setMaxSampleCount(1000)
 
         // Generate a static YZ data-set for this series that repeats indefinitely along the X plane.
         return createProgressiveTraceGenerator()
@@ -103,8 +103,6 @@ Promise.all(
     let tStart = Date.now()
     let dataAmount = 0
     let xPos = 0
-    // Keep track of data currently in each series.
-    seriesAndData.forEach((item) => (item.currentData = []))
 
     const pushNewData = () => {
         for (let iNewPoint = 0; iNewPoint < pointsPerFrame; iNewPoint++) {
@@ -116,8 +114,7 @@ Promise.all(
                     y: yz.y,
                     z: yz.z,
                 }
-                series.add(point)
-                currentData.push(point)
+                series.appendSample(point)
                 dataAmount++
             }
             xPos++
@@ -126,21 +123,6 @@ Promise.all(
         requestAnimationFrame(pushNewData)
     }
     pushNewData()
-
-    // Schedule cleaning of old data.
-    const checkCleanupOldData = () => {
-        const minPointsToKeep = 1000
-        for (let i = 0; i < seriesAndData.length; i++) {
-            const { series, data, currentData } = seriesAndData[i]
-            if (currentData.length < minPointsToKeep) continue
-            const spliceStart = currentData.length - minPointsToKeep
-            const spliceCount = Math.min(minPointsToKeep, currentData.length - spliceStart)
-            const pointsToKeep = currentData.splice(spliceStart, spliceCount)
-            series.clear().add(pointsToKeep)
-            seriesAndData[i].currentData = pointsToKeep
-        }
-    }
-    setInterval(checkCleanupOldData, 1000)
 
     // Display incoming points amount in Chart title.
     const title = chart3D.getTitle()
